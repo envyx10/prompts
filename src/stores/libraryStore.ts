@@ -7,29 +7,27 @@ interface LibraryState {
   isSaved: (id: string) => boolean
 }
 
-function safeParseStorage(name: string): { state: { savedIds: string[] } } | null {
+const STORAGE_KEY = 'promptly-library'
+
+// Exported for unit testing
+export function safeParseStorage(raw: string | null): Set<string> {
+  if (!raw) return new Set()
   try {
-    const str = localStorage.getItem(name)
-    if (!str) return null
-    const parsed = JSON.parse(str) as unknown
-    // Validate shape before trusting it
+    const parsed = JSON.parse(raw) as unknown
     if (
-      typeof parsed !== 'object' ||
-      parsed === null ||
+      typeof parsed !== 'object' || parsed === null ||
       !('state' in parsed) ||
       typeof (parsed as Record<string, unknown>).state !== 'object'
     ) {
-      return null
+      return new Set()
     }
-    const state = (parsed as { state: unknown }).state as Record<string, unknown>
-    const savedIds = Array.isArray(state.savedIds)
+    const state = (parsed as { state: Record<string, unknown> }).state
+    const ids = Array.isArray(state.savedIds)
       ? (state.savedIds as unknown[]).filter((x): x is string => typeof x === 'string')
       : []
-    return { state: { ...state, savedIds } } as { state: { savedIds: string[] } }
+    return new Set(ids)
   } catch {
-    // Corrupted data — discard and start fresh
-    localStorage.removeItem(name)
-    return null
+    return new Set()
   }
 }
 
@@ -50,31 +48,43 @@ export const useLibraryStore = create<LibraryState>()(
       isSaved: (id: string) => get().savedIds.has(id),
     }),
     {
-      name: 'promptly-library',
+      name: STORAGE_KEY,
       storage: {
         getItem: (name) => {
-          const parsed = safeParseStorage(name)
-          if (!parsed) return null
-          return {
-            ...parsed,
-            state: {
-              ...parsed.state,
-              savedIds: new Set(parsed.state.savedIds),
-            },
+          const raw = localStorage.getItem(name)
+          if (!raw) return null
+          const savedIds = safeParseStorage(raw)
+          // Re-read the full persisted object to keep version/other fields intact
+          try {
+            const parsed = JSON.parse(raw) as Record<string, unknown>
+            return { ...parsed, state: { ...(parsed.state as object), savedIds } }
+          } catch {
+            return null
           }
         },
         setItem: (name, value) => {
-          const toStore = {
+          const serializable = {
             ...value,
             state: {
               ...value.state,
               savedIds: Array.from(value.state.savedIds as Set<string>),
             },
           }
-          localStorage.setItem(name, JSON.stringify(toStore))
+          localStorage.setItem(name, JSON.stringify(serializable))
         },
         removeItem: (name) => localStorage.removeItem(name),
       },
     }
   )
 )
+
+// --- Multi-tab sync -------------------------------------------------------
+// When another tab writes to localStorage, update this tab's in-memory state
+// so both tabs stay consistent without requiring a page reload.
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    if (event.key !== STORAGE_KEY || event.newValue === null) return
+    const synced = safeParseStorage(event.newValue)
+    useLibraryStore.setState({ savedIds: synced })
+  })
+}

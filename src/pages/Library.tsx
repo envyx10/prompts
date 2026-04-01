@@ -4,11 +4,12 @@ import { motion } from 'framer-motion'
 import { BookOpen, Compass } from 'lucide-react'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { Button } from '@/components/ui/button'
-import PromptCard from '@/components/prompts/PromptCard'
+import VirtualPromptGrid from '@/components/prompts/VirtualPromptGrid'
 import SearchBar from '@/components/prompts/SearchBar'
 import { useAuthStore, selectUser } from '@/stores/authStore'
 import { useLibraryStore } from '@/stores/libraryStore'
-import { SAMPLE_PROMPTS } from '@/data/prompts'
+import { filterSavedPrompts } from '@/services/prompts'
+import { useDebounce } from '@/hooks/useDebounce'
 
 export default function Library() {
   const user = useAuthStore(selectUser)
@@ -16,19 +17,12 @@ export default function Library() {
   const { savedIds } = useLibraryStore()
   const [search, setSearch] = useState('')
 
-  const savedPrompts = useMemo(() => {
-    const q = search.toLowerCase()
-    // Single-pass filter: both saved check and search match
-    return SAMPLE_PROMPTS.filter(p => {
-      if (!savedIds.has(p.id)) return false
-      if (!q) return true
-      return (
-        p.title.toLowerCase().includes(q) ||
-        p.description.toLowerCase().includes(q) ||
-        p.tags.some(t => t.toLowerCase().includes(q))
-      )
-    })
-  }, [savedIds, search])
+  const debouncedSearch = useDebounce(search, 180)
+
+  const savedPrompts = useMemo(
+    () => filterSavedPrompts(savedIds, debouncedSearch),
+    [savedIds, debouncedSearch]
+  )
 
   if (!user) {
     return (
@@ -96,14 +90,10 @@ export default function Library() {
           <div className="flex flex-col gap-6">
             <SearchBar value={search} onChange={setSearch} placeholder="Buscar en mi librería..." />
             {savedPrompts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {savedPrompts.map(prompt => (
-                  <PromptCard key={prompt.id} prompt={prompt} />
-                ))}
-              </div>
+              <VirtualPromptGrid prompts={savedPrompts} />
             ) : (
               <div className="text-center py-12">
-                <p className="text-zinc-500">No hay resultados para &ldquo;{search}&rdquo;</p>
+                <p className="text-zinc-500">No hay resultados para &ldquo;{debouncedSearch}&rdquo;</p>
               </div>
             )}
           </div>
