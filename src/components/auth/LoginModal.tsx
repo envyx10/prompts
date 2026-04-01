@@ -58,13 +58,6 @@ export default function LoginModal() {
 
         <div className="relative px-6 pt-8 pb-6">
 
-          {/* Logo mark */}
-          <div className="flex justify-center mb-5">
-            <div className="w-11 h-11 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shadow-lg">
-              <span className="text-zinc-100 font-bold text-base tracking-tight">P</span>
-            </div>
-          </div>
-
           {/* Header */}
           <div className="text-center mb-6">
             <DialogTitle className="text-base font-semibold text-zinc-100 mb-1.5">

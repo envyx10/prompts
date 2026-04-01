@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { ChevronDown } from 'lucide-react'
+import InteractiveDotGrid from '@/components/ui/InteractiveDotGrid'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import CategoryFilter from '@/components/prompts/CategoryFilter'
 import VirtualPromptGrid from '@/components/prompts/VirtualPromptGrid'
@@ -63,17 +64,8 @@ export default function Home() {
       {/* ── Hero ──────────────────────────────────────────────────────── */}
       <section className="relative border-b border-zinc-800/50 overflow-hidden" style={{ minHeight: 'calc(100vh - 56px)' }}>
 
-        {/* Dot grid */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage: 'radial-gradient(circle, #3f3f46 1px, transparent 1px)',
-            backgroundSize: '28px 28px',
-            maskImage: 'radial-gradient(ellipse 70% 70% at 50% 50%, black 30%, transparent 100%)',
-            WebkitMaskImage: 'radial-gradient(ellipse 70% 70% at 50% 50%, black 30%, transparent 100%)',
-            opacity: 0.35,
-          }}
-        />
+        {/* Interactive dot grid */}
+        <InteractiveDotGrid />
 
         {/* Top glow line */}
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-zinc-700/60 to-transparent" />
@@ -100,13 +92,13 @@ export default function Home() {
             </motion.h1>
 
             {/* Subtext */}
-            <motion.p variants={itemVariants} className="text-zinc-500 text-base leading-relaxed max-w-lg mx-auto mb-12">
+            <motion.p variants={itemVariants} className="text-zinc-500 text-base leading-relaxed max-w-lg mx-auto mb-8">
               {t.sub}
             </motion.p>
 
             {/* CTA — only visible when logged out */}
             {!user && (
-              <motion.div variants={itemVariants} className="flex items-center justify-center gap-5 mb-16">
+              <motion.div variants={itemVariants} className="flex items-center justify-center gap-8 mb-16">
                 <Button onClick={openLogin} size="lg" className="text-sm h-10 px-6">
                   {t.cta}
                 </Button>
@@ -120,7 +112,7 @@ export default function Home() {
             )}
 
             {/* Stats */}
-            <motion.div variants={itemVariants} className="flex items-center justify-center gap-10">
+            <motion.div variants={itemVariants} className="flex items-center justify-center gap-8">
               <div className="text-center">
                 <p className="text-3xl font-bold text-zinc-100 tabular-nums">{TOTAL_PROMPTS}</p>
                 <p className="text-xs text-zinc-600 mt-0.5">{t.statA}</p>
