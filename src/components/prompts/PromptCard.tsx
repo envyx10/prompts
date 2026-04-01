@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Copy, Check, Bookmark, BookmarkCheck, ChevronDown, ChevronUp } from 'lucide-react'
 import { toast } from 'sonner'
@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription }
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { useAuthStore } from '@/stores/authStore'
+import { useAuthStore, selectUser } from '@/stores/authStore'
 import { useLibraryStore } from '@/stores/libraryStore'
 import type { Prompt } from '@/types'
 import { CATEGORIES } from '@/data/prompts'
@@ -24,11 +24,16 @@ const CATEGORY_ICONS: Record<string, string> = {
   other: '✨',
 }
 
+// Precomputed map for O(1) lookups instead of O(n) find() on every render
+const CATEGORY_LABEL_MAP = Object.fromEntries(CATEGORIES.map(c => [c.value, c.label]))
+
 const LANGUAGE_LABELS: Record<string, { label: string; color: string }> = {
   es: { label: 'ES', color: 'bg-amber-500/15 text-amber-300 border-amber-500/20' },
   en: { label: 'EN', color: 'bg-blue-500/15 text-blue-300 border-blue-500/20' },
   both: { label: 'ES/EN', color: 'bg-green-500/15 text-green-300 border-green-500/20' },
 }
+
+const PREVIEW_LENGTH = 120
 
 interface PromptCardProps {
   prompt: Prompt
@@ -37,18 +42,42 @@ interface PromptCardProps {
 export default function PromptCard({ prompt }: PromptCardProps) {
   const [copied, setCopied] = useState(false)
   const [expanded, setExpanded] = useState(false)
-  const { user, openLoginModal } = useAuthStore()
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const user = useAuthStore(selectUser)
+  const openLoginModal = useAuthStore((s) => s.openLoginModal)
   const { toggleSaved, isSaved } = useLibraryStore()
   const saved = isSaved(prompt.id)
 
-  const categoryLabel = CATEGORIES.find(c => c.value === prompt.category)?.label ?? prompt.category
+  // Clear timeout on unmount to prevent setState on unmounted component
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
+    }
+  }, [])
+
+  const categoryLabel = CATEGORY_LABEL_MAP[prompt.category] ?? prompt.category
   const langInfo = LANGUAGE_LABELS[prompt.language] ?? LANGUAGE_LABELS['en']
 
+  // Memoize derived content — only changes when prompt.content changes
+  const previewContent = useMemo(
+    () =>
+      prompt.content.length > PREVIEW_LENGTH
+        ? prompt.content.slice(0, PREVIEW_LENGTH) + '...'
+        : prompt.content,
+    [prompt.content]
+  )
+
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(prompt.content)
-    setCopied(true)
-    toast.success('¡Prompt copiado!', { description: 'Ya puedes pegarlo donde necesites.' })
-    setTimeout(() => setCopied(false), 2000)
+    try {
+      await navigator.clipboard.writeText(prompt.content)
+      setCopied(true)
+      toast.success('¡Prompt copiado!', { description: 'Ya puedes pegarlo donde necesites.' })
+      copyTimerRef.current = setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Clipboard API unavailable (HTTP context, permissions denied)
+      toast.error('No se pudo copiar', { description: 'Copia el texto manualmente.' })
+    }
   }
 
   const handleSave = () => {
@@ -60,16 +89,11 @@ export default function PromptCard({ prompt }: PromptCardProps) {
     toast.success(saved ? 'Eliminado de tu librería' : 'Guardado en tu librería')
   }
 
-  const previewContent = prompt.content.length > 120
-    ? prompt.content.slice(0, 120) + '...'
-    : prompt.content
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
-      layout
     >
       <Card className="group h-full flex flex-col hover:border-purple-500/40 hover:bg-zinc-900/80 transition-all duration-300">
         <CardHeader className="pb-3">
@@ -97,7 +121,7 @@ export default function PromptCard({ prompt }: PromptCardProps) {
             <pre className="text-xs text-zinc-300 whitespace-pre-wrap font-mono leading-relaxed">
               {expanded ? prompt.content : previewContent}
             </pre>
-            {prompt.content.length > 120 && (
+            {prompt.content.length > PREVIEW_LENGTH && (
               <button
                 onClick={() => setExpanded(!expanded)}
                 className="flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300 mt-2 transition-colors cursor-pointer"
@@ -125,12 +149,7 @@ export default function PromptCard({ prompt }: PromptCardProps) {
         <CardFooter className="pt-0 gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                onClick={handleCopy}
-                variant="default"
-                size="sm"
-                className="flex-1"
-              >
+              <Button onClick={handleCopy} variant="default" size="sm" className="flex-1">
                 {copied ? (
                   <><Check className="w-3.5 h-3.5" /> Copiado</>
                 ) : (

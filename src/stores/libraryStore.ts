@@ -7,19 +7,45 @@ interface LibraryState {
   isSaved: (id: string) => boolean
 }
 
+function safeParseStorage(name: string): { state: { savedIds: string[] } } | null {
+  try {
+    const str = localStorage.getItem(name)
+    if (!str) return null
+    const parsed = JSON.parse(str) as unknown
+    // Validate shape before trusting it
+    if (
+      typeof parsed !== 'object' ||
+      parsed === null ||
+      !('state' in parsed) ||
+      typeof (parsed as Record<string, unknown>).state !== 'object'
+    ) {
+      return null
+    }
+    const state = (parsed as { state: unknown }).state as Record<string, unknown>
+    const savedIds = Array.isArray(state.savedIds)
+      ? (state.savedIds as unknown[]).filter((x): x is string => typeof x === 'string')
+      : []
+    return { state: { ...state, savedIds } } as { state: { savedIds: string[] } }
+  } catch {
+    // Corrupted data — discard and start fresh
+    localStorage.removeItem(name)
+    return null
+  }
+}
+
 export const useLibraryStore = create<LibraryState>()(
   persist(
     (set, get) => ({
       savedIds: new Set<string>(),
       toggleSaved: (id: string) =>
         set((state) => {
-          const newSet = new Set(state.savedIds)
-          if (newSet.has(id)) {
-            newSet.delete(id)
+          const next = new Set(state.savedIds)
+          if (next.has(id)) {
+            next.delete(id)
           } else {
-            newSet.add(id)
+            next.add(id)
           }
-          return { savedIds: newSet }
+          return { savedIds: next }
         }),
       isSaved: (id: string) => get().savedIds.has(id),
     }),
@@ -27,9 +53,8 @@ export const useLibraryStore = create<LibraryState>()(
       name: 'promptly-library',
       storage: {
         getItem: (name) => {
-          const str = localStorage.getItem(name)
-          if (!str) return null
-          const parsed = JSON.parse(str) as { state: { savedIds: string[] } }
+          const parsed = safeParseStorage(name)
+          if (!parsed) return null
           return {
             ...parsed,
             state: {

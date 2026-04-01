@@ -6,7 +6,7 @@ import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import LoginModal from '@/components/auth/LoginModal'
-import { useAuthStore } from '@/stores/authStore'
+import { useAuthStore, selectUser } from '@/stores/authStore'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -58,11 +58,16 @@ DMSeparator.displayName = 'DMSeparator'
 
 export default function Header() {
   const location = useLocation()
-  const { user, openLoginModal } = useAuthStore()
+  const user = useAuthStore(selectUser)
+  const openLoginModal = useAuthStore((s) => s.openLoginModal)
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    toast.success('Sesión cerrada correctamente')
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      toast.error('Error al cerrar sesión. Inténtalo de nuevo.')
+    } else {
+      toast.success('Sesión cerrada correctamente')
+    }
   }
 
   const initials = user?.user_metadata?.full_name
@@ -94,19 +99,29 @@ export default function Header() {
               <span className="hidden sm:inline">Explorar</span>
             </Button>
           </Link>
-          <Link
-            to="/library"
-            onClick={!user ? (e) => { e.preventDefault(); openLoginModal() } : undefined}
-          >
+          {/* Use button instead of Link for unauth state — semantically correct */}
+          {user ? (
+            <Link to="/library">
+              <Button
+                variant={location.pathname === '/library' ? 'secondary' : 'ghost'}
+                size="sm"
+                className="gap-1.5"
+              >
+                <BookOpen className="w-4 h-4" />
+                <span className="hidden sm:inline">Mi Librería</span>
+              </Button>
+            </Link>
+          ) : (
             <Button
-              variant={location.pathname === '/library' ? 'secondary' : 'ghost'}
+              variant="ghost"
               size="sm"
               className="gap-1.5"
+              onClick={openLoginModal}
             >
               <BookOpen className="w-4 h-4" />
               <span className="hidden sm:inline">Mi Librería</span>
             </Button>
-          </Link>
+          )}
         </nav>
 
         {/* Auth */}

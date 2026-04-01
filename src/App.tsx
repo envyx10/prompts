@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import Header from '@/components/layout/Header'
 import Home from '@/pages/Home'
@@ -7,21 +7,17 @@ import { useAuthStore } from '@/stores/authStore'
 import { supabase } from '@/lib/supabase'
 
 export default function App() {
-  const { setUser, setSession } = useAuthStore()
+  const setSession = useAuthStore((s) => s.setSession)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-    })
-
+    // onAuthStateChange fires INITIAL_SESSION on mount — no need for getSession().
+    // A separate getSession() call races against it and causes double renders.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
-      setUser(session?.user ?? null)
     })
 
     return () => subscription.unsubscribe()
-  }, [setUser, setSession])
+  }, [setSession])
 
   return (
     <div className="min-h-screen bg-[#09090b] flex flex-col">
@@ -30,6 +26,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/library" element={<Library />} />
+          {/* Catch-all: unknown routes redirect home */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
     </div>

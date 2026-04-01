@@ -13,12 +13,14 @@ export default function Home() {
   const [langFilter, setLangFilter] = useState<'all' | 'es' | 'en'>('all')
 
   const filtered = useMemo(() => {
+    // Compute once per filter change — not once per prompt per field
+    const q = search.toLowerCase()
     return SAMPLE_PROMPTS.filter(p => {
-      const matchSearch = !search ||
-        p.title.toLowerCase().includes(search.toLowerCase()) ||
-        p.content.toLowerCase().includes(search.toLowerCase()) ||
-        p.description.toLowerCase().includes(search.toLowerCase()) ||
-        p.tags.some(t => t.toLowerCase().includes(search.toLowerCase()))
+      const matchSearch = !q ||
+        p.title.toLowerCase().includes(q) ||
+        p.content.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q) ||
+        p.tags.some(t => t.toLowerCase().includes(q))
       const matchCategory = category === 'all' || p.category === category
       const matchLang = langFilter === 'all' || p.language === langFilter || p.language === 'both'
       return matchSearch && matchCategory && matchLang

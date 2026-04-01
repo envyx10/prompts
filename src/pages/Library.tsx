@@ -6,22 +6,26 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { Button } from '@/components/ui/button'
 import PromptCard from '@/components/prompts/PromptCard'
 import SearchBar from '@/components/prompts/SearchBar'
-import { useAuthStore } from '@/stores/authStore'
+import { useAuthStore, selectUser } from '@/stores/authStore'
 import { useLibraryStore } from '@/stores/libraryStore'
 import { SAMPLE_PROMPTS } from '@/data/prompts'
 
 export default function Library() {
-  const { user, openLoginModal } = useAuthStore()
+  const user = useAuthStore(selectUser)
+  const openLoginModal = useAuthStore((s) => s.openLoginModal)
   const { savedIds } = useLibraryStore()
   const [search, setSearch] = useState('')
 
   const savedPrompts = useMemo(() => {
-    return SAMPLE_PROMPTS.filter(p => savedIds.has(p.id)).filter(p => {
-      if (!search) return true
+    const q = search.toLowerCase()
+    // Single-pass filter: both saved check and search match
+    return SAMPLE_PROMPTS.filter(p => {
+      if (!savedIds.has(p.id)) return false
+      if (!q) return true
       return (
-        p.title.toLowerCase().includes(search.toLowerCase()) ||
-        p.description.toLowerCase().includes(search.toLowerCase()) ||
-        p.tags.some(t => t.toLowerCase().includes(search.toLowerCase()))
+        p.title.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q) ||
+        p.tags.some(t => t.toLowerCase().includes(q))
       )
     })
   }, [savedIds, search])
@@ -99,7 +103,7 @@ export default function Library() {
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-zinc-500">No hay resultados para "{search}"</p>
+                <p className="text-zinc-500">No hay resultados para &ldquo;{search}&rdquo;</p>
               </div>
             )}
           </div>

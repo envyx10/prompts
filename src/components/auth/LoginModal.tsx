@@ -46,19 +46,18 @@ export default function LoginModal() {
   const [loading, setLoading] = useState<Provider | null>(null)
 
   const handleOAuth = async (provider: Provider) => {
-    try {
-      setLoading(provider)
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: window.location.origin,
-        },
-      })
-      if (error) throw error
-    } catch {
-      toast.error('Error al iniciar sesión. Inténtalo de nuevo.')
+    setLoading(provider)
+    // signInWithOAuth redirects the browser on success — the page navigates away.
+    // We only need to handle the error case (invalid config, network failure, etc.)
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: window.location.origin },
+    })
+    if (error) {
+      toast.error('Error al iniciar sesión', { description: error.message })
       setLoading(null)
     }
+    // On success: browser redirects, component unmounts, loading state irrelevant.
   }
 
   return (
