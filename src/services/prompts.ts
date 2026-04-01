@@ -1,9 +1,7 @@
 /**
  * Service layer for prompt data access.
- *
  * All pages consume this interface — not the raw data import.
- * To migrate from local data to Supabase, replace the implementations
- * here without touching any page or component.
+ * To migrate to Supabase: replace these implementations without touching pages.
  */
 
 import { SAMPLE_PROMPTS } from '@/data/prompts'
@@ -12,34 +10,36 @@ import type { Prompt } from '@/types'
 export interface PromptFilters {
   search?: string
   category?: string
-  language?: 'all' | 'es' | 'en'
 }
 
 /**
- * Returns prompts matching all active filters.
- * All string comparisons are case-insensitive.
+ * Returns prompts matching the active filters.
+ * Search is always performed across BOTH languages so users can type
+ * in either language regardless of the current UI language setting.
  */
 export function filterPrompts(filters: PromptFilters = {}): Prompt[] {
   const q = (filters.search ?? '').toLowerCase().trim()
   const category = filters.category ?? 'all'
-  const language = filters.language ?? 'all'
 
   return SAMPLE_PROMPTS.filter(p => {
     if (category !== 'all' && p.category !== category) return false
-    if (language !== 'all' && p.language !== language && p.language !== 'both') return false
     if (!q) return true
+    // Search across both language variants + tags (which are language-neutral)
     return (
-      p.title.toLowerCase().includes(q) ||
-      p.description.toLowerCase().includes(q) ||
-      p.content.toLowerCase().includes(q) ||
+      p.title.es.toLowerCase().includes(q)       ||
+      p.title.en.toLowerCase().includes(q)       ||
+      p.description.es.toLowerCase().includes(q) ||
+      p.description.en.toLowerCase().includes(q) ||
+      p.content.es.toLowerCase().includes(q)     ||
+      p.content.en.toLowerCase().includes(q)     ||
       p.tags.some(t => t.toLowerCase().includes(q))
     )
   })
 }
 
 /**
- * Returns only the prompts whose IDs are in the provided set,
- * optionally narrowed by a search query.
+ * Returns saved prompts, optionally narrowed by search query.
+ * Search is bilingual for consistency with filterPrompts.
  */
 export function filterSavedPrompts(ids: Set<string>, search = ''): Prompt[] {
   const q = search.toLowerCase().trim()
@@ -48,8 +48,10 @@ export function filterSavedPrompts(ids: Set<string>, search = ''): Prompt[] {
     if (!ids.has(p.id)) return false
     if (!q) return true
     return (
-      p.title.toLowerCase().includes(q) ||
-      p.description.toLowerCase().includes(q) ||
+      p.title.es.toLowerCase().includes(q)       ||
+      p.title.en.toLowerCase().includes(q)       ||
+      p.description.es.toLowerCase().includes(q) ||
+      p.description.en.toLowerCase().includes(q) ||
       p.tags.some(t => t.toLowerCase().includes(q))
     )
   })

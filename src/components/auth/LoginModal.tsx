@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { FaGithub, FaGoogle, FaLinkedinIn } from 'react-icons/fa'
-import { BsLightningChargeFill } from 'react-icons/bs'
 import { Loader2 } from 'lucide-react'
 import {
   Dialog,
@@ -10,6 +9,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { useAuthStore } from '@/stores/authStore'
+import { useLangStore } from '@/stores/langStore'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 
@@ -17,86 +17,71 @@ type Provider = 'github' | 'google' | 'linkedin_oidc'
 
 const providers: Array<{
   id: Provider
-  label: string
+  labelEs: string
+  labelEn: string
   icon: React.ComponentType<{ className?: string }>
-  className: string
 }> = [
-  {
-    id: 'github',
-    label: 'Continuar con GitHub',
-    icon: FaGithub,
-    className: 'bg-zinc-800 hover:bg-zinc-700 border-zinc-700',
-  },
-  {
-    id: 'google',
-    label: 'Continuar con Google',
-    icon: FaGoogle,
-    className: 'bg-zinc-800 hover:bg-zinc-700 border-zinc-700',
-  },
-  {
-    id: 'linkedin_oidc',
-    label: 'Continuar con LinkedIn',
-    icon: FaLinkedinIn,
-    className: 'bg-zinc-800 hover:bg-zinc-700 border-zinc-700',
-  },
+  { id: 'github',        labelEs: 'Continuar con GitHub',   labelEn: 'Continue with GitHub',   icon: FaGithub     },
+  { id: 'google',        labelEs: 'Continuar con Google',   labelEn: 'Continue with Google',   icon: FaGoogle     },
+  { id: 'linkedin_oidc', labelEs: 'Continuar con LinkedIn', labelEn: 'Continue with LinkedIn', icon: FaLinkedinIn },
 ]
 
 export default function LoginModal() {
   const { isLoginModalOpen, closeLoginModal } = useAuthStore()
+  const lang = useLangStore((s) => s.lang)
   const [loading, setLoading] = useState<Provider | null>(null)
 
   const handleOAuth = async (provider: Provider) => {
     setLoading(provider)
-    // signInWithOAuth redirects the browser on success — the page navigates away.
-    // We only need to handle the error case (invalid config, network failure, etc.)
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: { redirectTo: window.location.origin },
     })
     if (error) {
-      toast.error('Error al iniciar sesión', { description: error.message })
+      toast.error(lang === 'es' ? 'Error al iniciar sesión' : 'Sign in failed', {
+        description: error.message,
+      })
       setLoading(null)
     }
-    // On success: browser redirects, component unmounts, loading state irrelevant.
   }
 
   return (
     <Dialog open={isLoginModalOpen} onOpenChange={(open) => !open && closeLoginModal()}>
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader className="items-center text-center">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-violet-700 flex items-center justify-center shadow-lg shadow-purple-500/30 mx-auto mb-2">
-            <BsLightningChargeFill className="w-6 h-6 text-white" />
-          </div>
-          <DialogTitle className="text-xl">Bienvenido a Promptly</DialogTitle>
-          <DialogDescription className="text-zinc-400 text-center">
-            Inicia sesión para guardar prompts y crear tu librería personal. Sin registro, sin contraseñas.
+      <DialogContent className="sm:max-w-xs bg-zinc-950 border-zinc-800">
+        <DialogHeader>
+          <DialogTitle className="text-base font-semibold text-zinc-100">
+            {lang === 'es' ? 'Acceder a Promptly' : 'Sign in to Promptly'}
+          </DialogTitle>
+          <DialogDescription className="text-xs text-zinc-500 leading-relaxed">
+            {lang === 'es'
+              ? 'Sin formularios. Sin contraseñas. Elige tu proveedor y listo.'
+              : 'No forms. No passwords. Choose a provider and you\'re in.'
+            }
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-3 mt-2">
-          {providers.map(({ id, label, icon: Icon, className }) => (
+        <div className="flex flex-col gap-2 mt-1">
+          {providers.map(({ id, labelEs, labelEn, icon: Icon }) => (
             <button
               key={id}
               onClick={() => handleOAuth(id)}
               disabled={loading !== null}
-              className={`
-                relative flex items-center gap-3 w-full rounded-xl border px-4 py-3 text-sm font-medium text-zinc-100
-                transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer
-                ${className}
-              `}
+              className="flex items-center gap-3 w-full rounded-md border border-zinc-800 bg-zinc-900 px-4 py-2.5 text-sm text-zinc-200 transition-colors hover:border-zinc-700 hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
-              {loading === id ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <Icon className="w-5 h-5" />
-              )}
-              <span>{label}</span>
+              {loading === id
+                ? <Loader2 className="w-4 h-4 animate-spin text-zinc-400" />
+                : <Icon className="w-4 h-4 text-zinc-400" />
+              }
+              {lang === 'es' ? labelEs : labelEn}
             </button>
           ))}
         </div>
 
-        <p className="text-xs text-zinc-500 text-center mt-2">
-          Al continuar, aceptas nuestros términos de uso y política de privacidad.
+        <p className="text-[11px] text-zinc-600 mt-1">
+          {lang === 'es'
+            ? 'Al continuar aceptas los términos de uso.'
+            : 'By continuing you accept the terms of use.'
+          }
         </p>
       </DialogContent>
     </Dialog>

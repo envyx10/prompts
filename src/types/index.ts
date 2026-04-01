@@ -1,4 +1,4 @@
-export type Language = 'es' | 'en' | 'both'
+export type Lang = 'es' | 'en'
 
 export type Category =
   | 'writing'
@@ -12,20 +12,23 @@ export type Category =
   | 'design'
   | 'other'
 
+export interface BilingualText {
+  es: string
+  en: string
+}
+
 export interface Prompt {
   id: string
-  title: string
-  content: string
-  description: string
+  title: BilingualText
+  content: BilingualText
+  description: BilingualText
   category: Category
-  language: Language
   tags: string[]
   author_id?: string
   is_public: boolean
   use_count: number
   created_at: string
   updated_at: string
-  is_saved?: boolean
 }
 
 export interface UserProfile {

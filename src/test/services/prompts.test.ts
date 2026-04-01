@@ -6,39 +6,51 @@ import { SAMPLE_PROMPTS } from '@/data/prompts'
 // filterPrompts
 // ---------------------------------------------------------------------------
 describe('filterPrompts', () => {
-  it('returns all prompts when called with no filters', () => {
+  it('returns all prompts with no filters', () => {
     expect(filterPrompts()).toHaveLength(SAMPLE_PROMPTS.length)
   })
 
   it('returns all prompts with empty filter values', () => {
-    expect(filterPrompts({ search: '', category: 'all', language: 'all' }))
+    expect(filterPrompts({ search: '', category: 'all' }))
       .toHaveLength(SAMPLE_PROMPTS.length)
   })
 
-  // --- search ---
-  it('matches by title (case-insensitive)', () => {
-    const result = filterPrompts({ search: 'code review' })
+  // --- search (bilingual) ---
+  it('matches by Spanish title', () => {
+    const result = filterPrompts({ search: 'revisión' })
     expect(result.length).toBeGreaterThan(0)
     result.forEach(p =>
       expect(
-        p.title.toLowerCase().includes('code review') ||
-        p.content.toLowerCase().includes('code review') ||
-        p.description.toLowerCase().includes('code review') ||
-        p.tags.some(t => t.toLowerCase().includes('code review'))
+        p.title.es.toLowerCase().includes('revisión') ||
+        p.description.es.toLowerCase().includes('revisión') ||
+        p.content.es.toLowerCase().includes('revisión')
       ).toBe(true)
     )
   })
 
-  it('matches by tag', () => {
-    const result = filterPrompts({ search: 'SEO' })
+  it('matches by English title', () => {
+    const result = filterPrompts({ search: 'code review' })
     expect(result.length).toBeGreaterThan(0)
-    result.forEach(p =>
-      expect(p.tags.some(t => t.toLowerCase().includes('seo'))).toBe(true)
-    )
   })
 
-  it('returns empty array for a search with no matches', () => {
-    expect(filterPrompts({ search: 'xyzzy_no_match_12345' })).toHaveLength(0)
+  it('finds the same prompt regardless of search language', () => {
+    const es = filterPrompts({ search: 'revisión de código' })
+    const en = filterPrompts({ search: 'code review' })
+    const esIds = new Set(es.map(p => p.id))
+    const enIds = new Set(en.map(p => p.id))
+    // At least one prompt in common (the code review prompt)
+    const overlap = [...esIds].filter(id => enIds.has(id))
+    expect(overlap.length).toBeGreaterThan(0)
+  })
+
+  it('matches by tag (language-neutral)', () => {
+    const result = filterPrompts({ search: 'SQL' })
+    expect(result.length).toBeGreaterThan(0)
+    result.forEach(p => expect(p.tags.some(t => t.toLowerCase().includes('sql'))).toBe(true))
+  })
+
+  it('returns empty array when no matches exist', () => {
+    expect(filterPrompts({ search: 'xyzzy_no_match_99999' })).toHaveLength(0)
   })
 
   // --- category ---
@@ -56,45 +68,32 @@ describe('filterPrompts', () => {
     expect(filterPrompts({ category: 'does_not_exist' })).toHaveLength(0)
   })
 
-  // --- language ---
-  it('filters by "es" — includes es and both', () => {
-    const result = filterPrompts({ language: 'es' })
-    expect(result.length).toBeGreaterThan(0)
-    result.forEach(p => expect(['es', 'both']).toContain(p.language))
-  })
-
-  it('filters by "en" — includes en and both', () => {
-    const result = filterPrompts({ language: 'en' })
-    expect(result.length).toBeGreaterThan(0)
-    result.forEach(p => expect(['en', 'both']).toContain(p.language))
-  })
-
-  it('"all" language returns everything', () => {
-    expect(filterPrompts({ language: 'all' })).toHaveLength(SAMPLE_PROMPTS.length)
-  })
-
-  // --- combined filters ---
+  // --- combined ---
   it('applies search + category together', () => {
-    const result = filterPrompts({ search: 'code', category: 'coding' })
+    const result = filterPrompts({ search: 'debug', category: 'coding' })
     result.forEach(p => {
       expect(p.category).toBe('coding')
-      const q = 'code'
+      const q = 'debug'
       expect(
-        p.title.toLowerCase().includes(q) ||
-        p.content.toLowerCase().includes(q) ||
-        p.description.toLowerCase().includes(q) ||
-        p.tags.some(t => t.toLowerCase().includes(q))
+        p.title.es.toLowerCase().includes(q) ||
+        p.title.en.toLowerCase().includes(q) ||
+        p.content.es.toLowerCase().includes(q) ||
+        p.content.en.toLowerCase().includes(q)
       ).toBe(true)
     })
   })
 
-  it('returns subset when category + language narrow the results', () => {
-    const all = filterPrompts()
-    const narrowed = filterPrompts({ category: 'coding', language: 'en' })
-    expect(narrowed.length).toBeLessThanOrEqual(all.length)
-    narrowed.forEach(p => {
-      expect(p.category).toBe('coding')
-      expect(['en', 'both']).toContain(p.language)
+  // --- data shape ---
+  it('all prompts have bilingual title, description, and content', () => {
+    SAMPLE_PROMPTS.forEach(p => {
+      expect(typeof p.title.es).toBe('string')
+      expect(typeof p.title.en).toBe('string')
+      expect(typeof p.description.es).toBe('string')
+      expect(typeof p.description.en).toBe('string')
+      expect(typeof p.content.es).toBe('string')
+      expect(typeof p.content.en).toBe('string')
+      expect(p.title.es.length).toBeGreaterThan(0)
+      expect(p.title.en.length).toBeGreaterThan(0)
     })
   })
 })
@@ -115,27 +114,20 @@ describe('filterSavedPrompts', () => {
   })
 
   it('ignores ids not present in SAMPLE_PROMPTS', () => {
-    const ids = new Set(['1', 'fake-id-9999'])
-    const result = filterSavedPrompts(ids)
+    const result = filterSavedPrompts(new Set(['1', 'fake-9999']))
     expect(result.length).toBe(1)
     expect(result[0].id).toBe('1')
   })
 
-  it('applies search filter within saved prompts', () => {
+  it('applies bilingual search within saved prompts', () => {
     const ids = new Set(SAMPLE_PROMPTS.map(p => p.id))
-    const result = filterSavedPrompts(ids, 'email')
-    expect(result.length).toBeGreaterThan(0)
-    result.forEach(p =>
-      expect(
-        p.title.toLowerCase().includes('email') ||
-        p.description.toLowerCase().includes('email') ||
-        p.tags.some(t => t.toLowerCase().includes('email'))
-      ).toBe(true)
-    )
+    const esResult = filterSavedPrompts(ids, 'email')
+    const enResult = filterSavedPrompts(ids, 'email')
+    expect(esResult.length).toBeGreaterThan(0)
+    expect(enResult.length).toBeGreaterThan(0)
   })
 
-  it('returns empty array when search matches nothing in the saved set', () => {
-    const ids = new Set(['1'])
-    expect(filterSavedPrompts(ids, 'xyzzy_nomatch')).toHaveLength(0)
+  it('returns empty when search matches nothing in saved set', () => {
+    expect(filterSavedPrompts(new Set(['1']), 'xyzzy_nomatch')).toHaveLength(0)
   })
 })

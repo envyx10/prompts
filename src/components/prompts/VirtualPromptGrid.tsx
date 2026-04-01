@@ -11,7 +11,7 @@ import type { Prompt } from '@/types'
 const VIRTUALIZATION_THRESHOLD = 30
 
 /** Estimated card height + gap — virtualizer refines this with measureElement */
-const ROW_HEIGHT_ESTIMATE = 356
+const ROW_HEIGHT_ESTIMATE = 220
 const GAP = 16 // gap-4
 
 // --- Responsive column count ------------------------------------------
