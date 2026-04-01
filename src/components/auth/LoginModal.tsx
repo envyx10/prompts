@@ -4,7 +4,6 @@ import { Loader2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
@@ -47,42 +46,67 @@ export default function LoginModal() {
 
   return (
     <Dialog open={isLoginModalOpen} onOpenChange={(open) => !open && closeLoginModal()}>
-      <DialogContent className="sm:max-w-xs bg-zinc-950 border-zinc-800">
-        <DialogHeader>
-          <DialogTitle className="text-base font-semibold text-zinc-100">
-            {lang === 'es' ? 'Acceder a Promptly' : 'Sign in to Promptly'}
-          </DialogTitle>
-          <DialogDescription className="text-xs text-zinc-500 leading-relaxed">
-            {lang === 'es'
-              ? 'Sin formularios. Sin contraseñas. Elige tu proveedor y listo.'
-              : 'No forms. No passwords. Choose a provider and you\'re in.'
-            }
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-sm bg-zinc-950 border-zinc-800/80 p-0 overflow-hidden">
 
-        <div className="flex flex-col gap-2 mt-1">
-          {providers.map(({ id, labelEs, labelEn, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => handleOAuth(id)}
-              disabled={loading !== null}
-              className="flex items-center gap-3 w-full rounded-md border border-zinc-800 bg-zinc-900 px-4 py-2.5 text-sm text-zinc-200 transition-colors hover:border-zinc-700 hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-            >
-              {loading === id
-                ? <Loader2 className="w-4 h-4 animate-spin text-zinc-400" />
-                : <Icon className="w-4 h-4 text-zinc-400" />
+        {/* Top glow line */}
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-zinc-600/50 to-transparent" />
+        {/* Radial glow */}
+        <div
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse at top, rgba(255,255,255,0.04) 0%, transparent 70%)' }}
+        />
+
+        <div className="relative px-6 pt-8 pb-6">
+
+          {/* Logo mark */}
+          <div className="flex justify-center mb-5">
+            <div className="w-11 h-11 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shadow-lg">
+              <span className="text-zinc-100 font-bold text-base tracking-tight">P</span>
+            </div>
+          </div>
+
+          {/* Header */}
+          <div className="text-center mb-6">
+            <DialogTitle className="text-base font-semibold text-zinc-100 mb-1.5">
+              {lang === 'es' ? 'Acceder a Promptly' : 'Sign in to Promptly'}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-zinc-500 leading-relaxed">
+              {lang === 'es'
+                ? 'Sin formularios. Sin contraseñas. Elige tu proveedor y listo.'
+                : 'No forms. No passwords. Choose a provider and you\'re in.'
               }
-              {lang === 'es' ? labelEs : labelEn}
-            </button>
-          ))}
-        </div>
+            </DialogDescription>
+          </div>
 
-        <p className="text-[11px] text-zinc-600 mt-1">
-          {lang === 'es'
-            ? 'Al continuar aceptas los términos de uso.'
-            : 'By continuing you accept the terms of use.'
-          }
-        </p>
+          {/* Providers */}
+          <div className="flex flex-col gap-2">
+            {providers.map(({ id, labelEs, labelEn, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => handleOAuth(id)}
+                disabled={loading !== null}
+                className="flex items-center gap-3 w-full rounded-lg border border-zinc-800 bg-zinc-900/60 px-4 py-3 text-sm text-zinc-200 transition-all hover:border-zinc-700 hover:bg-zinc-800/80 hover:text-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {loading === id
+                  ? <Loader2 className="w-4 h-4 animate-spin text-zinc-400 shrink-0" />
+                  : <Icon className="w-4 h-4 text-zinc-400 shrink-0" />
+                }
+                <span className="flex-1 text-left">{lang === 'es' ? labelEs : labelEn}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Divider + terms */}
+          <div className="mt-5 pt-5 border-t border-zinc-800/60">
+            <p className="text-center text-[11px] text-zinc-600">
+              {lang === 'es'
+                ? 'Al continuar aceptas los términos de uso.'
+                : 'By continuing you accept the terms of use.'
+              }
+            </p>
+          </div>
+
+        </div>
       </DialogContent>
     </Dialog>
   )

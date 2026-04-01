@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
+import { ChevronDown } from 'lucide-react'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import CategoryFilter from '@/components/prompts/CategoryFilter'
 import VirtualPromptGrid from '@/components/prompts/VirtualPromptGrid'
@@ -34,7 +35,6 @@ export default function Home() {
   )
 
   const t = {
-    tag:       lang === 'es' ? 'Bilingüe · Español & English'  : 'Bilingual · Español & English',
     h1a:       lang === 'es' ? 'La librería de prompts'         : 'The prompt library',
     h1b:       lang === 'es' ? 'que necesitas.'                 : 'you actually need.',
     sub:       lang === 'es'
@@ -61,7 +61,7 @@ export default function Home() {
     <TooltipProvider>
 
       {/* ── Hero ──────────────────────────────────────────────────────── */}
-      <section className="relative border-b border-zinc-800/50 overflow-hidden">
+      <section className="relative border-b border-zinc-800/50 overflow-hidden" style={{ minHeight: 'calc(100vh - 56px)' }}>
 
         {/* Dot grid */}
         <div
@@ -84,17 +84,8 @@ export default function Home() {
           style={{ background: 'radial-gradient(ellipse at top, rgba(255,255,255,0.05) 0%, transparent 65%)' }}
         />
 
-        <div className="relative max-w-4xl mx-auto px-6 py-24 sm:py-36 text-center">
+        <div className="relative max-w-4xl mx-auto px-6 text-center flex flex-col items-center justify-center" style={{ minHeight: 'calc(100vh - 56px)' }}>
           <motion.div variants={heroVariants} initial="hidden" animate="visible">
-
-            {/* Tag */}
-            <motion.div variants={itemVariants} className="inline-flex items-center gap-2.5 mb-10">
-              <div className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
-              <p className="text-[11px] font-medium tracking-widest text-zinc-500 uppercase">
-                {t.tag}
-              </p>
-              <div className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
-            </motion.div>
 
             {/* Headline */}
             <motion.h1
@@ -148,6 +139,25 @@ export default function Home() {
 
           </motion.div>
         </div>
+
+        {/* Scroll indicator */}
+        <motion.button
+          onClick={scrollToPrompts}
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1, duration: 0.6, ease: 'easeOut' }}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-zinc-600 hover:text-zinc-400 transition-colors cursor-pointer"
+        >
+          <span className="text-[10px] tracking-widest uppercase">
+            {lang === 'es' ? 'Ver prompts' : 'Browse'}
+          </span>
+          <motion.div
+            animate={{ y: [0, 4, 0] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            <ChevronDown className="w-4 h-4" strokeWidth={1.5} />
+          </motion.div>
+        </motion.button>
 
         {/* Bottom glow line */}
         <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-zinc-800/80 to-transparent" />
