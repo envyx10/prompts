@@ -91,7 +91,7 @@ export default function Header() {
 
         {/* Logo — wordmark only, no gradient box */}
         <Link to="/" className="text-sm font-semibold tracking-tight text-zinc-100 hover:text-white transition-colors">
-          Promptly
+          PromptLib
         </Link>
 
         {/* Nav */}

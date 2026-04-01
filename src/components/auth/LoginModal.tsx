@@ -61,7 +61,7 @@ export default function LoginModal() {
           {/* Header */}
           <div className="text-center mb-6">
             <DialogTitle className="text-base font-semibold text-zinc-100 mb-1.5">
-              {lang === 'es' ? 'Acceder a Promptly' : 'Sign in to Promptly'}
+              {lang === 'es' ? 'Acceder a PromptLib' : 'Sign in to PromptLib'}
             </DialogTitle>
             <DialogDescription className="text-xs text-zinc-500 leading-relaxed">
               {lang === 'es'

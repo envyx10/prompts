@@ -1,6 +1,5 @@
 import { useRef, useMemo, useState, useEffect } from 'react'
 import { useWindowVirtualizer } from '@tanstack/react-virtual'
-import { motion, AnimatePresence } from 'framer-motion'
 import PromptCard from './PromptCard'
 import type { Prompt } from '@/types'
 
@@ -67,19 +66,14 @@ export default function VirtualPromptGrid({ prompts }: Props) {
     scrollMargin: listRef.current?.offsetTop ?? 0,
   })
 
-  // --- Regular grid for small datasets (keeps Framer Motion animations)
+  // --- Regular grid for small datasets
   if (prompts.length <= VIRTUALIZATION_THRESHOLD) {
     return (
-      <AnimatePresence mode="popLayout">
-        <motion.div
-          layout
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-        >
-          {prompts.map(prompt => (
-            <PromptCard key={prompt.id} prompt={prompt} />
-          ))}
-        </motion.div>
-      </AnimatePresence>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {prompts.map(prompt => (
+          <PromptCard key={prompt.id} prompt={prompt} />
+        ))}
+      </div>
     )
   }
 

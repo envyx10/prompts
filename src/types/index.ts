@@ -10,6 +10,8 @@ export type Category =
   | 'education'
   | 'data'
   | 'design'
+  | 'architecture'
+  | 'frontend'
   | 'other'
 
 export interface BilingualText {

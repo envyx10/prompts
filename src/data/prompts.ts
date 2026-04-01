@@ -1,4 +1,5 @@
 import type { Prompt } from '@/types'
+import { DEV_PROMPTS } from './dev-prompts'
 
 export const SAMPLE_PROMPTS: Prompt[] = [
   // ── CODING ────────────────────────────────────────────────────────────────
@@ -327,15 +328,19 @@ export const SAMPLE_PROMPTS: Prompt[] = [
   },
 ]
 
+export const ALL_PROMPTS: Prompt[] = [...SAMPLE_PROMPTS, ...DEV_PROMPTS]
+
 export const CATEGORIES = [
-  { value: 'all',          label: 'Todos',         labelEn: 'All'          },
-  { value: 'coding',       label: 'Código',         labelEn: 'Coding'       },
-  { value: 'writing',      label: 'Escritura',      labelEn: 'Writing'      },
-  { value: 'marketing',    label: 'Marketing',      labelEn: 'Marketing'    },
-  { value: 'productivity', label: 'Productividad',  labelEn: 'Productivity' },
-  { value: 'business',     label: 'Negocio',        labelEn: 'Business'     },
-  { value: 'creativity',   label: 'Creatividad',    labelEn: 'Creativity'   },
-  { value: 'data',         label: 'Datos',          labelEn: 'Data'         },
-  { value: 'education',    label: 'Educación',      labelEn: 'Education'    },
-  { value: 'design',       label: 'Diseño',         labelEn: 'Design'       },
+  { value: 'all',           label: 'Todos',          labelEn: 'All'           },
+  { value: 'coding',        label: 'Código',          labelEn: 'Coding'        },
+  { value: 'writing',       label: 'Escritura',       labelEn: 'Writing'       },
+  { value: 'productivity',  label: 'Productividad',   labelEn: 'Productivity'  },
+  { value: 'architecture',  label: 'Arquitectura',    labelEn: 'Architecture'  },
+  { value: 'data',          label: 'Datos / SQL',     labelEn: 'Data / SQL'    },
+  { value: 'frontend',      label: 'Frontend / UI',   labelEn: 'Frontend / UI' },
+  { value: 'education',     label: 'Educación',       labelEn: 'Education'     },
+  { value: 'marketing',     label: 'Marketing',       labelEn: 'Marketing'     },
+  { value: 'business',      label: 'Negocio',         labelEn: 'Business'      },
+  { value: 'creativity',    label: 'Creatividad',     labelEn: 'Creativity'    },
+  { value: 'design',        label: 'Diseño',          labelEn: 'Design'        },
 ]

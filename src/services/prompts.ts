@@ -4,7 +4,7 @@
  * To migrate to Supabase: replace these implementations without touching pages.
  */
 
-import { SAMPLE_PROMPTS } from '@/data/prompts'
+import { ALL_PROMPTS } from '@/data/prompts'
 import type { Prompt } from '@/types'
 
 export interface PromptFilters {
@@ -21,7 +21,7 @@ export function filterPrompts(filters: PromptFilters = {}): Prompt[] {
   const q = (filters.search ?? '').toLowerCase().trim()
   const category = filters.category ?? 'all'
 
-  return SAMPLE_PROMPTS.filter(p => {
+  return ALL_PROMPTS.filter(p => {
     if (category !== 'all' && p.category !== category) return false
     if (!q) return true
     // Search across both language variants + tags (which are language-neutral)
@@ -44,7 +44,7 @@ export function filterPrompts(filters: PromptFilters = {}): Prompt[] {
 export function filterSavedPrompts(ids: Set<string>, search = ''): Prompt[] {
   const q = search.toLowerCase().trim()
 
-  return SAMPLE_PROMPTS.filter(p => {
+  return ALL_PROMPTS.filter(p => {
     if (!ids.has(p.id)) return false
     if (!q) return true
     return (

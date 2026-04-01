@@ -9,11 +9,11 @@ import { useLangStore } from '@/stores/langStore'
 import { useAuthStore, selectUser } from '@/stores/authStore'
 import { filterPrompts } from '@/services/prompts'
 import { Button } from '@/components/ui/button'
-import { SAMPLE_PROMPTS } from '@/data/prompts'
+import { ALL_PROMPTS } from '@/data/prompts'
 
 // ── Static stats derived from data ────────────────────────────────────────
-const TOTAL_PROMPTS    = SAMPLE_PROMPTS.length
-const TOTAL_CATEGORIES = new Set(SAMPLE_PROMPTS.map(p => p.category)).size
+const TOTAL_PROMPTS    = ALL_PROMPTS.length
+const TOTAL_CATEGORIES = new Set(ALL_PROMPTS.map(p => p.category)).size
 
 const heroVariants = {
   hidden:   {},
